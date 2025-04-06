@@ -7,6 +7,7 @@ import os
 from langchain_google_genai import ChatGoogleGenerativeAI
 from pydantic import BaseModel, Field
 from flask import Flask, request, jsonify
+from urllib.parse import urlparse
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -121,6 +122,10 @@ class RAG_pipeline():
         print(f"final_result is \n {final_metatdata}")    
         return final_metatdata
 
+def is_valid_url(url):
+    parsed = urlparse(url)
+    return parsed.scheme in ["http", "https"] and parsed.netloc
+
    
 def scrape_text(url):
     """
@@ -151,12 +156,18 @@ def generate_shl_assessment():
     try:
         # Step 1: Scrape the text from the URL
         structured_llm = llm.with_structured_output(internal_Sources)
-        result = structured_llm.invoke(f"Extract url from this text :: {input_text}") 
+        result = structured_llm.invoke(f"If a valid URL is present in this text, extract it :: {input_text}.. Else return None") 
         # check if there is url or not 
         extracted_text = ""
         if result is not None:
             url = result.url
+            
             print(f"url is {url}")
+            if is_valid_url(url):
+                extracted_text = scrape_text(url)
+            else:
+                print("Invalid URL extracted; skipping scrape.")
+
             extracted_text = scrape_text(url)
             
         prompt = (
