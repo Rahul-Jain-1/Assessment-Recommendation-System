@@ -1,0 +1,8 @@
+langchain
+langchain-chroma
+langchain-google-genai
+langchain-community
+python-dotenv
+beautifulsoup4
+requests
+pandas
